@@ -1,0 +1,152 @@
+name: Create Release
+
+on:
+  push:
+      paths:
+      - 'VERSION.txt'
+
+jobs:
+  bundle-windows:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    env:
+      VCPKG_VERSION: 2022.03.10
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup xmake
+      uses: xmake-io/github-action-setup-xmake@v1
+      with:
+        xmake-version: 2.6.4
+
+    - name: Installing vcpkg
+      run: |
+        git clone -b ${{env.VCPKG_VERSION}} --single-branch https://github.com/Microsoft/vcpkg.git .vcpkg
+        cd .vcpkg
+        .\bootstrap-vcpkg.bat
+        .\vcpkg.exe integrate install
+        cd ..
+
+    - name: Cache vcpkg
+      uses: actions/cache@v2
+      with:
+        path: |
+          ${{ github.workspace }}\.vcpkg\installed
+        key: ${{ runner.os }}-release-${{env.VCPKG_VERSION}}-${{ hashFiles('xmake.lua') }}-x64-v5
+
+    - name: Bundle
+      run: |
+        xmake bundle -v -y
+      env:
+        VCPKG_ROOT: ${{ github.workspace }}/.vcpkg
+
+    - name: Upload test-app-win64
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-app-win64
+        path: build/test-app-win64.zip
+
+  bundle-linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      VCPKG_VERSION: 2022.03.10
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up GCC 11
+      uses: egor-tensin/setup-gcc@v1
+      with:
+        version: 11
+        platform: x64
+
+    - name: Setup xmake
+      uses: xmake-io/github-action-setup-xmake@v1
+      with:
+        xmake-version: 2.6.4
+
+    - name: Installing vcpkg
+      run: |
+        git clone -b ${{env.VCPKG_VERSION}} --single-branch https://github.com/Microsoft/vcpkg.git .vcpkg
+        cd .vcpkg
+        ./bootstrap-vcpkg.sh
+        cd ..
+    - name: Cache vcpkg
+      uses: actions/cache@v2
+      with:
+        path: |
+          ${{ github.workspace }}/.vcpkg/installed
+        key: ${{ runner.os }}-release-${{env.VCPKG_VERSION}}-${{ hashFiles('xmake.lua') }}-x64-v5
+
+    - name: Bundle
+      run: |
+        xmake bundle -v -y
+      env:
+        VCPKG_ROOT: ${{ github.workspace }}/.vcpkg
+
+    - name: Upload test-app-linux
+      uses: actions/upload-artifact@v3
+      with:
+        name: zenserver-linux
+        path: build/test-app-linux.zip
+
+  create-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [bundle-linux, bundle-windows]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Download Linux artifacts
+      uses: actions/download-artifact@v1
+      with:
+        name: test-app-linux
+        path: linux
+
+    - name: Download Windows artifacts
+      uses: actions/download-artifact@v1
+      with:
+        name: test-app-win64
+        path: win64
+
+    - name: Extract Version Changes
+      run: |
+        sed '1,/^##/!d;/##/d' CHANGELOG.md > CHANGELOG.tmp
+
+    - name: Read CHANGELOG.tmp
+      id: read_changelog
+      uses: andstor/file-reader-action@v1
+      with:
+        path: "CHANGELOG.tmp"
+
+    - name: Read VERSION.txt
+      id: read_version
+      uses: andstor/file-reader-action@v1
+      with:
+        path: "VERSION.txt"
+
+    - name: Check prerelease
+      id: get-prerelease
+      uses: haya14busa/action-cond@v1
+      with:
+        cond: ${{contains(steps.read_version.outputs.contents, '-pre')}}
+        if_true: "true"
+        if_false: "false"
+
+    - name: Create Release
+      id: create_release
+      uses: softprops/action-gh-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{steps.read_version.outputs.contents}}
+        body: |
+          ${{steps.read_changelog.outputs.contents}}
+        draft: false
+        prerelease: ${{steps.get-prerelease.outputs.value}}
+        files: |
+          linux/test-app-linux.zip
+          win64/test-app-win64.zip
