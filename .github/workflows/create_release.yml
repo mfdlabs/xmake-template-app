@@ -2,8 +2,10 @@ name: Create Release
 
 on:
   push:
-    branches:
-      - master
+    paths:
+      - "src/**"
+      - ".github/workflows/**"
+      - "xmake.lua"
 
 jobs:
   bundle-windows:
