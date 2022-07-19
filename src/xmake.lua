@@ -1,4 +1,4 @@
-target("test-app")
+target("template-app")
     set_kind("binary")
     add_headerfiles("**.h")
     add_files("**.cc")

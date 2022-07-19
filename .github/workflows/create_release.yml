@@ -45,11 +45,11 @@ jobs:
       env:
         VCPKG_ROOT: ${{ github.workspace }}/.vcpkg
 
-    - name: Upload test-app-win64
+    - name: Upload template-app-win64
       uses: actions/upload-artifact@v3
       with:
-        name: test-app-win64
-        path: build/test-app-win64.zip
+        name: template-app-win64
+        path: build/template-app-win64.zip
 
   bundle-linux:
     runs-on: ubuntu-latest
@@ -91,11 +91,11 @@ jobs:
       env:
         VCPKG_ROOT: ${{ github.workspace }}/.vcpkg
 
-    - name: Upload test-app-linux
+    - name: Upload template-app-linux
       uses: actions/upload-artifact@v3
       with:
-        name: test-app-linux
-        path: build/test-app-linux.zip
+        name: template-app-linux
+        path: build/template-app-linux.zip
 
   bundle-macos:
    runs-on: macos-latest
@@ -132,11 +132,11 @@ jobs:
      env:
        VCPKG_ROOT: ${{ github.workspace }}/.vcpkg
 
-   - name: Upload test-app-macos
+   - name: Upload template-app-macos
      uses: actions/upload-artifact@v3
      with:
-       name: test-app-macos
-       path: build/test-app-macos.zip
+       name: template-app-macos
+       path: build/template-app-macos.zip
 
   create-release:
     runs-on: ubuntu-latest
@@ -150,19 +150,19 @@ jobs:
     - name: Download Linux artifacts
       uses: actions/download-artifact@v1
       with:
-        name: test-app-linux
+        name: template-app-linux
         path: linux
 
     - name: Download Windows artifacts
       uses: actions/download-artifact@v1
       with:
-        name: test-app-win64
+        name: template-app-win64
         path: win64
 
     - name: Download MacOS artifacts
       uses: actions/download-artifact@v1
       with:
-        name: test-app-macos
+        name: template-app-macos
         path: macos
 
     - name: Create Release
@@ -176,6 +176,6 @@ jobs:
         draft: false
         prerelease: ${{ github.ref_name != 'master' }}
         files: |
-          linux/test-app-linux.zip
-          win64/test-app-win64.zip
-          macos/test-app-macos.zip
+          linux/template-app-linux.zip
+          win64/template-app-win64.zip
+          macos/template-app-macos.zip
