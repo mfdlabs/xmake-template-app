@@ -146,16 +146,16 @@ local function _find_vcpkg_binary(triple, port, binary)
 end 
 
 local function main_windows() 
-    zip_path = "build/test-app-win64.zip"
+    zip_path = "build/template-app-win64.zip"
 
-    _build("test-app", "x64", false)
+    _build("template-app", "x64", false)
 
     local mode = "release"
     if is_mode("debug") then
         mode = "debug"
     end
 
-    local output_base_name = "build/windows/x64/" .. mode .. "/test-app"
+    local output_base_name = "build/windows/x64/" .. mode .. "/template-app"
 
     local exe_path = output_base_name .. ".exe"
     local pdb_path = output_base_name .. ".pdb"
@@ -170,41 +170,42 @@ local function main_windows()
 end
 
 local function main_linux()
-    zip_path = "build/test-app-linux.zip"
+    zip_path = "build/template-app-linux.zip"
 
-    _build("test-app", "x86_64")
+    _build("template-app", "x86_64")
 
     local mode = "release"
     if is_mode("debug") then
         mode = "debug"
     end
 
-    local output_base_name = "build/linux/x86_64/" .. mode .. "/test-app"
+    local output_base_name = "build/linux/x86_64/" .. mode .. "/template-app"
     local zip_paths = {output_base_name}
     _zip(false, zip_path, table.unpack(zip_paths))
 end
 
 local function main_mac()
     -- Build and universalify
-    _build("test-app", "x86_64", false, "--target_minver=10.15")
-    _build("test-app", "arm64", false, "--target_minver=10.15")
+    _build("template-app", "x86_64", false, "--target_minver=10.15")
+    _build("template-app", "arm64", false, "--target_minver=10.15")
 
     os.mkdir("build/macosx/universal/release/")
 	local ret = _exec(
         "lipo",
         "-create",
-        "-output", "build/macosx/universal/release/test-app",
-        "build/macosx/x86_64/release/test-app",
-        "build/macosx/arm64/release/test-app"
+        "-output", "build/macosx/universal/release/template-app",
+        "build/macosx/x86_64/release/template-app",
+        "build/macosx/arm64/release/template-app"
     )
     if ret > 0 then
         raise("Failed creating universal binary")
     end
 
     -- Zip
-    _zip(false,
-        "build/test-app-macos.zip",
-        "build/macosx/universal/release/test-app",
+    _zip(
+        false,
+        "build/template-app-macos.zip",
+        "build/macosx/universal/release/template-app",
         crashpad_handler_path
     )
 end

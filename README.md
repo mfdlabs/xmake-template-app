@@ -1,3 +1,3 @@
-# XMake Test App
+# XMake Template App
 
-A test app for XMake.
+Template for building XMake Executables.
