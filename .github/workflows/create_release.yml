@@ -11,6 +11,7 @@ jobs:
   bundle-windows:
     runs-on: windows-latest
     timeout-minutes: 15
+    if: "!contains(toJSON(github.event.commits.*.message), '[SKIP CI]')"
     env:
       VCPKG_VERSION: 2022.03.10
 
@@ -51,6 +52,7 @@ jobs:
 
   bundle-linux:
     runs-on: ubuntu-latest
+    if: "!contains(toJSON(github.event.commits.*.message), '[SKIP CI]')"
     timeout-minutes: 15
     env:
       VCPKG_VERSION: 2022.03.10
@@ -96,6 +98,7 @@ jobs:
 
   create-release:
     runs-on: ubuntu-latest
+    if: "!contains(toJSON(github.event.commits.*.message), '[SKIP CI]')"
     timeout-minutes: 5
     needs: [bundle-linux, bundle-windows]
 
