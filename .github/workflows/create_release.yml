@@ -112,41 +112,16 @@ jobs:
         name: test-app-win64
         path: win64
 
-    - name: Extract Version Changes
-      run: |
-        sed '1,/^##/!d;/##/d' CHANGELOG.md > CHANGELOG.tmp
-
-    - name: Read CHANGELOG.tmp
-      id: read_changelog
-      uses: andstor/file-reader-action@v1
-      with:
-        path: "CHANGELOG.tmp"
-
-    - name: Read VERSION.txt
-      id: read_version
-      uses: andstor/file-reader-action@v1
-      with:
-        path: "VERSION.txt"
-
-    - name: Check prerelease
-      id: get-prerelease
-      uses: haya14busa/action-cond@v1
-      with:
-        cond: ${{contains(steps.read_version.outputs.contents, '-pre')}}
-        if_true: "true"
-        if_false: "false"
-
     - name: Create Release
       id: create_release
       uses: softprops/action-gh-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: v${{steps.read_version.outputs.contents}}
-        body: |
-          ${{steps.read_changelog.outputs.contents}}
+        tag_name: build-${{github.run_id}}
+        generate_release_notes: true
         draft: false
-        prerelease: ${{steps.get-prerelease.outputs.value}}
+        prerelease: ${{ github.ref_name != 'master' }}
         files: |
           linux/test-app-linux.zip
           win64/test-app-win64.zip
