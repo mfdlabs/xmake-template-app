@@ -48,6 +48,7 @@ jobs:
     needs: cancel-old-build
     name: Build & Test Windows
     runs-on: windows-latest
+    if: "!contains(toJSON(github.event.commits.*.message), '[SKIP VALIDATE BUILD]')"
     timeout-minutes: 15
     strategy:
       matrix:
@@ -112,6 +113,7 @@ jobs:
     needs: cancel-old-build
     name: Build & Test Linux
     runs-on: ubuntu-latest
+    if: "!contains(toJSON(github.event.commits.*.message), '[SKIP VALIDATE BUILD]')"
     timeout-minutes: 15
     strategy:
       matrix:
@@ -181,6 +183,7 @@ jobs:
     needs: cancel-old-build
     name: Build & Test MacOS
     runs-on: macos-latest
+    if: "!contains(toJSON(github.event.commits.*.message), '[SKIP VALIDATE BUILD]')"
     timeout-minutes: 15
     strategy:
       matrix:
