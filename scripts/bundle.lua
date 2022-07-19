@@ -204,7 +204,7 @@ local function main_mac()
     -- Zip
     _zip(false,
         "build/test-app-macos.zip",
-        "build/macosx/universal/release/test-app"
+        "build/macosx/universal/release/test-app",
         crashpad_handler_path
     )
 end
