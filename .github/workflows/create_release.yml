@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - "src/**"
+      - "scripts/**"
       - ".github/workflows/**"
       - "xmake.lua"
 
@@ -96,11 +97,52 @@ jobs:
         name: test-app-linux
         path: build/test-app-linux.zip
 
+  bundle-macos:
+   runs-on: macos-latest
+   if: "!contains(toJSON(github.event.commits.*.message), '[SKIP CI]')"
+   timeout-minutes: 15
+   env:
+     VCPKG_VERSION: 2022.03.10
+
+   steps:
+   - uses: actions/checkout@v2
+
+   - name: Setup xmake
+     uses: xmake-io/github-action-setup-xmake@v1
+     with:
+       xmake-version: 2.6.4
+
+   - name: Installing vcpkg
+     run: |
+       git clone -b ${{env.VCPKG_VERSION}} --single-branch https://github.com/Microsoft/vcpkg.git .vcpkg
+       cd .vcpkg
+       ./bootstrap-vcpkg.sh
+       cd ..
+
+   - name: Cache vcpkg
+     uses: actions/cache@v2
+     with:
+       path: |
+         ${{ github.workspace }}/.vcpkg/installed
+       key: ${{ runner.os }}-release-${{env.VCPKG_VERSION}}-${{ hashFiles('xmake.lua') }}-x64-v5
+
+   - name: Bundle
+     run: |
+       xmake bundle -v -y
+     env:
+       VCPKG_ROOT: ${{ github.workspace }}/.vcpkg
+
+   - name: Upload test-app-macos
+     uses: actions/upload-artifact@v3
+     with:
+       name: test-app-macos
+       path: build/test-app-macos.zip
+
   create-release:
     runs-on: ubuntu-latest
     if: "!contains(toJSON(github.event.commits.*.message), '[SKIP CI]')"
     timeout-minutes: 5
-    needs: [bundle-linux, bundle-windows]
+    needs: [bundle-linux, bundle-windows, bundle-macos]
 
     steps:
     - uses: actions/checkout@v2
@@ -117,6 +159,12 @@ jobs:
         name: test-app-win64
         path: win64
 
+    - name: Download MacOS artifacts
+      uses: actions/download-artifact@v1
+      with:
+        name: test-app-macos
+        path: macos
+
     - name: Create Release
       id: create_release
       uses: softprops/action-gh-release@v1
@@ -130,3 +178,4 @@ jobs:
         files: |
           linux/test-app-linux.zip
           win64/test-app-win64.zip
+          macos/test-app-macos.zip

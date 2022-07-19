@@ -184,6 +184,31 @@ local function main_linux()
     _zip(false, zip_path, table.unpack(zip_paths))
 end
 
+local function main_mac()
+    -- Build and universalify
+    _build("test-app", "x86_64", false, "--target_minver=10.15")
+    _build("test-app", "arm64", false, "--target_minver=10.15")
+
+    os.mkdir("build/macosx/universal/release/")
+	local ret = _exec(
+        "lipo",
+        "-create",
+        "-output", "build/macosx/universal/release/test-app",
+        "build/macosx/x86_64/release/test-app",
+        "build/macosx/arm64/release/test-app"
+    )
+    if ret > 0 then
+        raise("Failed creating universal binary")
+    end
+
+    -- Zip
+    _zip(false,
+        "build/test-app-macos.zip",
+        "build/macosx/universal/release/test-app",
+        crashpad_handler_path
+    )
+end
+
 function main() 
     if is_host("windows") then
         main_windows()
@@ -193,6 +218,12 @@ function main()
 
     if is_host("linux") then
         main_linux()
+
+        return
+    end
+
+    if is_host("mac") then
+        main_mac()
 
         return
     end
