@@ -186,8 +186,8 @@ end
 
 local function main_mac()
     -- Build and universalify
-    _build("x86_64", false, "--target_minver=10.15")
-    _build("arm64", false, "--target_minver=10.15")
+    _build("test-app", "x86_64", false, "--target_minver=10.15")
+    _build("test-app", "arm64", false, "--target_minver=10.15")
 
     os.mkdir("build/macosx/universal/release/")
 	local ret = _exec(
