@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - "src/**"
+      - "scripts/**"
       - ".github/workflows/**"
       - "xmake.lua"
 
