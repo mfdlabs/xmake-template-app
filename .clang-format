@@ -146,4 +146,3 @@ UseCRLF:         false
 UseTab:          Always
 WhitespaceSensitiveMacros:
   - STRINGIZE
-...
